@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from cryptography.fernet import Fernet
-from functools import wraps
 import random
 
 
@@ -103,33 +102,14 @@ class CreditCardDecorator(ICreditCard):
         return self._credit_card.give_details()
 
 
-def calculate_tax(fn):
-    @wraps(fn)
-    def wrapper(self, cash: float, account_number: str, account):
-        tax = 0.02
-        return fn(self, cash * (1 - tax), account_number, account)
-    return wrapper
-
-
-class Account:
-    def __init__(self):
-        self.__cash = 0.0
-
-    @property
-    def cash(self):
-        return self.__cash
-
-    @cash.setter
-    def cash(self, cash):
-        self.__cash = cash
-
-    def check_money(self) -> str:
-        return f"There is {self.__cash}$ in your account!"
-
-
 class GoldenCreditCard(CreditCardDecorator):
-    @calculate_tax
-    def transfer_cash(self, cash: float, account_number: str, account: Account):
+    def __init__(self, credit_card: ICreditCard):
+        super().__init__(credit_card)
+
+    def give_details(self, *args) -> dict:
+        return self.credit_card.give_details()
+
+    def transfer_cash(self, cash: float, account_number: str, account):
         choice = str(input("PDV=2%, Do you want to transfer your cash [y/n]: "))
         if choice == 'y':
             cvv = str(input('ENTER YOR CVV CODE, PLEASE: '))
@@ -145,25 +125,35 @@ class GoldenCreditCard(CreditCardDecorator):
             return "Thank you for your choice, BYE!"
 
 
-def get_discount(fn):
-    @wraps(fn)
-    def wrapper(self, check_to_pay: float, account):
-        discount = 0.05
-        if check_to_pay >= 500:
-            print(f"You made a purchase more than 500$ so you have a DISCOUNT 5%")
-            check_to_pay = check_to_pay * (1 - discount)
-        return fn(self, check_to_pay, account)
-    return wrapper
-
-
 class CorporateCreditCard(CreditCardDecorator):
-    @get_discount
-    def pay_bill(self, check_to_pay: float, account: Account):
+    def __init__(self, credit_card: ICreditCard):
+        super().__init__(credit_card)
+
+    def give_details(self, *args) -> dict:
+        return self.credit_card.give_details()
+
+    def pay_bill(self, check_to_pay: float, account):
         if account.cash >= check_to_pay:
             account.cash -= check_to_pay
             return f"You paid the bill successfully -{check_to_pay}$"
         else:
             return "Sorry, You lack money in your account!"
+
+
+class Account:
+    def __init__(self):
+        self.__cash = 0.0
+
+    @property
+    def cash(self):
+        return self.__cash
+
+    @cash.setter
+    def cash(self, cash: float):
+        self.__cash = cash
+
+    def check_money(self) -> str:
+        return f"There is {self.__cash}$ in your account!"
 
 
 # The client
@@ -186,14 +176,14 @@ print(client.give_details(client))
 
 print("\nDECORATOR DESIGN PATTERN")
 
-account = Account()
+my_account = Account()
 
 golden_card = GoldenCreditCard(credit_card)
 cash = float(input('Enter amount of cash for transferring: '))
-print(golden_card.transfer_cash(cash=cash, account_number=credit_card.account_number, account=account))
+print(golden_card.transfer_cash(cash=cash, account_number=credit_card.account_number, account=my_account))
 
 corporate_card = CorporateCreditCard(credit_card)
 check = random.randint(5, 1000)
 print(f"You MUST PAY THE BILL {check}$")
-print(corporate_card.pay_bill(check_to_pay=check, account=account))
-print(account.check_money())
+print(corporate_card.pay_bill(check_to_pay=check, account=my_account))
+print(my_account.check_money())
