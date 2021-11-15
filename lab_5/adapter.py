@@ -88,12 +88,9 @@ class BankCustomer:
         return args
 
 
-class CreditCardDecorator(ICreditCard):
+class CreditCardDecorator:
     def __init__(self, decorated_card):
         self.decorated_card = decorated_card
-
-    def give_details(self, *args) -> dict:
-        return self.decorated_card.give_details()
 
     def add_contactless_chip(self):
         self.decorated_card.contactless_chip = True
@@ -119,7 +116,6 @@ class CorporateCreditCard(CreditCardDecorator):
 
 
 # The client
-print("ADAPTER DESIGN PATTERN")
 credit_card = CreditCard(client='Julia', account_number='123-4-5678-8910-1-1',
                          credit_limit=1500.0, grace_period=50)
 credit_card.cvv = '235'
