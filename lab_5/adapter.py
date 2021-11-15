@@ -89,71 +89,33 @@ class BankCustomer:
 
 
 class CreditCardDecorator(ICreditCard):
-    _credit_card: ICreditCard = None
-
-    def __init__(self, credit_card: ICreditCard):
-        self._credit_card = credit_card
-
-    @property
-    def credit_card(self):
-        return self._credit_card
+    def __init__(self, decorated_card):
+        self.decorated_card = decorated_card
 
     def give_details(self, *args) -> dict:
-        return self._credit_card.give_details()
+        return self.decorated_card.give_details()
+
+    def add_contactless_chip(self):
+        self.decorated_card.contactless_chip = True
+        return self.decorated_card
 
 
 class GoldenCreditCard(CreditCardDecorator):
-    def __init__(self, credit_card: ICreditCard):
-        super().__init__(credit_card)
+    def __init__(self, decorated_card):
+        super(GoldenCreditCard, self).__init__(decorated_card)
 
-    def give_details(self, *args) -> dict:
-        return self.credit_card.give_details()
-
-    def transfer_cash(self, cash: float, account_number: str, account):
-        choice = str(input("PDV=2%, Do you want to transfer your cash [y/n]: "))
-        if choice == 'y':
-            cvv = str(input('ENTER YOR CVV CODE, PLEASE: '))
-            if cvv == self.credit_card.cvv:
-                report = {'account_number': account_number,
-                          'cash': cash}
-                account.cash = cash
-                account.check_money()
-                return f"Your cash had been transferred successfully! {report}"
-            else:
-                return"Sorry, you have entered incorrect CVV code!"
-        elif choice == 'n':
-            return "Thank you for your choice, BYE!"
+    def add_contactless_chip(self):
+        super(GoldenCreditCard, self).add_contactless_chip()
+        print("Contactless chip has added to GoldenCreditCard")
 
 
 class CorporateCreditCard(CreditCardDecorator):
-    def __init__(self, credit_card: ICreditCard):
-        super().__init__(credit_card)
+    def __init__(self, decorated_card):
+        super(CorporateCreditCard, self).__init__(decorated_card)
 
-    def give_details(self, *args) -> dict:
-        return self.credit_card.give_details()
-
-    def pay_bill(self, check_to_pay: float, account):
-        if account.cash >= check_to_pay:
-            account.cash -= check_to_pay
-            return f"You paid the bill successfully -{check_to_pay}$"
-        else:
-            return "Sorry, You lack money in your account!"
-
-
-class Account:
-    def __init__(self):
-        self.__cash = 0.0
-
-    @property
-    def cash(self):
-        return self.__cash
-
-    @cash.setter
-    def cash(self, cash: float):
-        self.__cash = cash
-
-    def check_money(self) -> str:
-        return f"There is {self.__cash}$ in your account!"
+    def add_contactless_chip(self):
+        super(CorporateCreditCard, self).add_contactless_chip()
+        print("Contactless chip has added to CorporateCreditCard")
 
 
 # The client
@@ -174,16 +136,8 @@ bank.accounts_number.append(credit_card.account_number)
 bank.transaction_list(credit_card.account_number)
 print(client.give_details(client))
 
-print("\nDECORATOR DESIGN PATTERN")
+golden_credit_card = GoldenCreditCard(credit_card)
+golden_credit_card.add_contactless_chip()
 
-my_account = Account()
-
-golden_card = GoldenCreditCard(credit_card)
-cash = float(input('Enter amount of cash for transferring: '))
-print(golden_card.transfer_cash(cash=cash, account_number=credit_card.account_number, account=my_account))
-
-corporate_card = CorporateCreditCard(credit_card)
-check = random.randint(5, 1000)
-print(f"You MUST PAY THE BILL {check}$")
-print(corporate_card.pay_bill(check_to_pay=check, account=my_account))
-print(my_account.check_money())
+corporate_credit_card = CorporateCreditCard(credit_card)
+corporate_credit_card.add_contactless_chip()
